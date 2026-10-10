@@ -4,10 +4,10 @@
 
 | Slice | Status | Commits | Review | Interfaces for later slices |
 |---|---|---|---|---|
-| S1 | running | | | none |
+| S1 | done | `9fac9b5..346a6df` | CLEAN | HOME_HEADING, HOME_LINE in src/lib/home.ts |
 
 ## Rulings
 
 ## Verification
 
-- todo
+- running
