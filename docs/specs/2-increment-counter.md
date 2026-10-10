@@ -2,7 +2,7 @@
 item: 2
 type: feature
 title: "Add increment button that increments a counter"
-status: draft
+status: approved
 branch: claude/2-increment-counter
 ---
 
