@@ -10,4 +10,4 @@
 
 ## Verification
 
-- running
+- done
