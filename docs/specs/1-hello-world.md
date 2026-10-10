@@ -2,7 +2,7 @@
 item: 1
 type: feature
 title: "v1: Hello world front page"
-status: draft
+status: approved
 branch: claude/1-hello-world
 ---
 
