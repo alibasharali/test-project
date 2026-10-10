@@ -1,0 +1,89 @@
+name: Claude Code Review
+
+# Independent review of every PR against the repo's rules and the item's spec (docs/agents/review-policy.md):
+#   Auto-fix        → Claude commits the fix (fix(review): …) to the PR branch
+#   Needs a human   → inline comment = unresolved thread, which blocks auto-merge until resolved
+# Managed by Software Factory's agent kit. claude-code-action refuses to run on a PR that changes
+# this file, so kit-update PRs fail this check and need a manual merge.
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude-review:
+    # never on forks: the review can push to the branch
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 20
+
+      # the review's own fix triggers a new run; don't review it again
+      - name: Skip if the last commit is a review fix
+        id: guard
+        run: |
+          if git log -1 --format=%s | grep -q '^fix(review):'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v5
+        if: steps.guard.outputs.skip != 'true' && hashFiles('package.json') != ''
+        with:
+          node-version: 24
+          cache: npm
+
+      - if: steps.guard.outputs.skip != 'true' && hashFiles('package-lock.json') != ''
+        run: npm ci
+
+      - uses: anthropics/claude-code-action@v1
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # commits from @claude (claude.yml) are pushed by claude[bot]
+          allowed_bots: "claude"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            BRANCH: ${{ github.head_ref }} (checked out; push fixes here)
+
+            You are the independent reviewer for a repo built spec-first by AI agents.
+            Read the diff with `gh pr diff` and the description with `gh pr view` first.
+
+            Review against, in this order:
+            1. `CLAUDE.md` and the `.claude/rules/*.md` matching the files the diff touches.
+            2. `docs/agents/workflow.md`: the definition of done and the guardrails.
+            3. The item's spec, if the PR names one (`docs/specs/<n>-*.md`): every AC implemented
+               and tested, domain decisions followed, nothing from "Out of scope" built.
+
+            Report only real, specific problems you are confident about: correctness bugs and edge
+            cases, breaches of documented conventions, security, missing tests or tests changed to
+            pass, docs that disagree with the code. No formatting, taste or praise.
+
+            Classify every finding with `docs/agents/review-policy.md`. Read it before acting:
+            - Auto-fix: make the fix, run `.claude/check.sh`, then commit
+              `fix(review): <what>` (one commit per finding) and `git push`. If the check goes red,
+              revert and treat the finding as Needs a human.
+            - Needs a human: an inline comment on the right line with
+              mcp__github_inline_comment__create_inline_comment: what is wrong and your recommended
+              fix. End it with: "Reply `@claude <what you want>` here to have Claude fix it, or fix it
+              yourself. Resolve the thread when it's handled."
+
+            Finish with one PR comment (`gh pr comment`):
+            1. a verdict: "Ready to merge", "Needs fixes" or "Needs clarification"
+            2. "Fixed automatically": one line per fix with the short SHA
+            3. "Needs a human": one line per inline comment
+            If you find nothing, say so in one sentence.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Read,Grep,Glob,Edit,Write,Bash(.claude/check.sh),Bash(npm ci:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git checkout -- :*)"

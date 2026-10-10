@@ -1,0 +1,14 @@
+node_modules
+.DS_Store
+dist
+*.local
+.env
+.tanstack
+.wrangler
+.output
+.dev.vars*
+!.dev.vars.example
+
+# generated
+worker-configuration.d.ts
+src/routeTree.gen.ts

@@ -1,0 +1,42 @@
+---
+name: write-spec
+description: Write or revise the agent-ready spec for a board item in docs/specs/, grilling the developer on every open decision for features. Use when an item has no approved spec, or the user asks to write, change or reopen a spec.
+---
+
+# Write spec
+
+A spec is written for agents: precise and complete. It is the **single source of truth** for what gets built; the implementing agents read nothing else about the item.
+
+## 1. Gather the facts
+
+Finding facts is your job, never the developer's. Read the item (`get_item`), `CLAUDE.md`, `CONTEXT.md`, the ADRs in `docs/adr/`, and the code the item touches (an Explore subagent when it spans several areas). Note the existing seams, modules, routes and data you will build on.
+
+Done when you can name every module the item will change.
+
+## 2. Grill (features only)
+
+Interview the developer until nothing is left silently assumed. Map the open decisions as a tree: each decision unlocks the ones that hang off it.
+
+- Work in **rounds**. Ask every question whose prerequisites are settled, numbered, each with your recommended answer. Wait for the answers, then ask the next round.
+- Never ask for a fact you can look up; look it up.
+- Cover: **domain rules** (push hardest here: edge cases, empty states, what happens to existing data), **user experience** (who does what, where, in what order), **scope boundary**, **data** (new fields, migrations, existing rows), and **test seams** (which test proves each behaviour).
+
+Done when every section of the template can be filled without a guess. Anything the developer defers goes under *Open questions* as `deferred`.
+
+**Bugs and chores skip grilling.** Write a short spec from the item and the code: Problem, Acceptance criteria, one slice, Out of scope. Ask only if the item is genuinely ambiguous.
+
+## 3. Write
+
+Fill in [spec-template.md](spec-template.md) as `docs/specs/<n>-<slug>.md`, with the branch's slug. Rules:
+
+- Number everything (D1, AC1, S1) so code, commits and review can cite it.
+- Every acceptance criterion is observable from outside: Given/When/Then with concrete values.
+- Every slice is vertical (data → server → UI for one behaviour) and lists the ACs it satisfies. Slice order is build order.
+- Name modules and behaviour, not file paths or code, except for a schema or state shape a decision depends on.
+
+## 4. Publish
+
+1. Commit `docs(spec): #<n> <title>` and push the branch.
+2. `attach_spec(N, path, summary, branch)` with a three-line summary.
+
+Done when the pushed spec is `status: draft` (features) or `status: approved` (bugs and chores, which have no gate) and the item links it.

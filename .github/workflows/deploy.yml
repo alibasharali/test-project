@@ -1,0 +1,46 @@
+name: Deploy
+
+# develop → Worker test-project-dev, main → Worker test-project. Never deploy by hand.
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # the factory reads this environment name to move items to On dev / In prod
+    environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      # CLOUDFLARE_ENV picks the wrangler environment at build time (vite plugin); the
+      # build then redirects wrangler to its output config, so later commands need no --env
+      - name: Select environment
+        if: github.ref_name != 'main'
+        run: echo "CLOUDFLARE_ENV=dev" >> "$GITHUB_ENV"
+
+      - run: npm ci
+      - run: .claude/check.sh   # tests, typecheck and the build for this environment
+
+      # before the deploy: new code may read new tables or columns
+      - name: Apply D1 migrations
+        run: |
+          if ls drizzle/*.sql >/dev/null 2>&1; then
+            npx wrangler d1 migrations apply DB --remote
+          else
+            echo "No migrations yet."
+          fi
+
+      - name: Deploy
+        run: npx wrangler deploy

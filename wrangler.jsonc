@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "test-project",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "upload_source_maps": true,
+  "vars": { "APP_ENV": "prod" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "test-project", "database_id": "572851a9-c004-4bb9-8972-878357b9b712", "migrations_dir": "drizzle" }
+  ],
+  // environments don't inherit vars or bindings: every env redeclares them.
+  // CLOUDFLARE_ENV is resolved at build time by the vite plugin (see deploy.yml).
+  "env": {
+    "dev": {
+      "name": "test-project-dev",
+      "workers_dev": true,
+      "vars": { "APP_ENV": "dev" },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "test-project-dev", "database_id": "9949e640-e321-40d9-8058-c3b5f4183e53", "migrations_dir": "drizzle" }
+      ]
+    }
+  }
+}

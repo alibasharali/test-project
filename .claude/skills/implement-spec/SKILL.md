@@ -1,0 +1,50 @@
+---
+name: implement-spec
+description: Implement an approved item spec slice by slice through fresh subagents, review each slice, then verify every acceptance criterion against the running app. Use when a spec in docs/specs/ has status approved, or the user asks to implement or continue implementing an item.
+---
+
+# Implement spec
+
+You are the **orchestrator**. You write no production code yourself. A fresh `slice-implementer` builds each slice, a `slice-reviewer` checks it, and a `verifier` checks the result on the running app. You hold the spec, the ledger and the developer's rulings; you are the only one who talks to the developer, and **the only one who commits**.
+
+Why: one item in one context degrades toward the end. Fresh workers get a precise brief and nothing else; you stay small enough to think.
+
+## 0. Preconditions
+
+- You are on `claude/<n>-*`.
+- The spec says `status: approved`. Otherwise stop and hand back to the gate in the `item` skill: approval is the developer's call.
+- Ledger `docs/specs/<n>-<slug>/progress.md`: if it exists, resume from the first slice not `done`. If not, create it from [ledger-template.md](ledger-template.md), one row per slice, `todo`.
+
+Call `update_item_status(N, "in_progress")` if the item isn't there yet.
+
+## 1. Each slice, in spec order, one at a time
+
+1. `BASE=$(git rev-parse HEAD)`. Set the slice to `running` in the ledger.
+2. **Brief** a `slice-implementer` (foreground). It sees nothing but the brief:
+   - **Objective:** the slice text, every AC it satisfies, and the domain decisions those ACs rest on, all verbatim.
+   - **Sources:** the spec path, the *Test seams* rows for these ACs, the ledger's *Interfaces* from earlier slices, rulings that touch this slice.
+   - **Boundaries:** the spec's *Out of scope*, other slices' ACs ("not yours").
+   - **Output:** the report shape from its definition. Tell it not to commit.
+3. **BLOCKED:** don't answer for the developer. Ask them, with the worker's options and recommendation, and call `request_attention(N, "<question>")`. Record the ruling in the ledger. If it changes the spec, commit `docs(spec): …` first. Resume the **same** implementer with the ruling verbatim.
+4. **DONE:** compare `git status` with the reported *Changed files*: nothing outside the slice, no scratch files. Commit `feat(<area>): S<n> <slice name> (#<n>)`. Record `BASE..HEAD` and the *Interfaces* in the ledger. Brief a `slice-reviewer` with the spec path, slice, ACs, seams and range.
+5. **Route the review:**
+   - `CLEAN` → step 6.
+   - `FIX` → resume the same implementer with the findings verbatim, commit `fix(review): <what>`, re-review the new range. At most two rounds; what's left becomes a question for the developer.
+   - `HUMAN` → ask the developer with the reviewer's options, record the ruling, and send any code change to the implementer as a fix round.
+6. Set the slice to `done`, commit the ledger `docs(ledger): S<n> done (#<n>)`, and push. Pushing after each slice means a restarted session loses nothing.
+
+If the spec turns out wrong or incomplete, stop and ask the developer. The spec is corrected first, in its own commit, then the code follows. They must never disagree.
+
+## 2. Full checks
+
+Run `.claude/check.sh` yourself. A red result goes back to a `slice-implementer` as a fix brief, never to you.
+
+## 3. Verify
+
+Green checks are not verification. Brief the `verifier` with the spec path and the *Test seams and verification* table.
+
+- `ALL PASS` → keep its summary for the PR, and `post_verification(N, summary)`.
+- `FAILED` → each failed AC is a bug: brief a `slice-implementer` with the AC and what the verifier saw, review the fix, then re-verify the failed ACs only.
+- `BLOCKED` → fix the environment (install, start the app) and re-dispatch. If the app genuinely can't run in this sandbox, verify what you can through tests and say plainly in the summary which ACs were not checked on a running app.
+
+Done when every AC has a verdict. Next is `ship`.
