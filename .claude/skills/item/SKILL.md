@@ -30,6 +30,7 @@ An **idea** is never worked on: tell the developer to promote it to a feature, b
 ## 3. Branch
 
 1. `git fetch origin develop && git switch -c claude/<n>-<slug> origin/develop`. The slug is 2–4 ASCII kebab-case words from the title.
+   Cloud sessions start on an auto-named branch (`claude/<adjective>-<name>-…`). Don't use it: the factory only links `claude/<n>-<slug>`, and a restarted session must find the same branch again.
 2. Move the item: `update_item_status(N, "spec")` for features, `update_item_status(N, "in_progress")` for bugs and chores.
 
 ## 4. Spec
