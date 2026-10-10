@@ -19,6 +19,11 @@ describe('home page', () => {
     expect(html).toContain('This webpage is working.')
   })
 
+  it('renders an Increment button and a counter showing 0', () => {
+    expect(html).toMatch(/<button[^>]*>Increment<\/button>/)
+    expect(html).toMatch(/<output[^>]*>0<\/output>/)
+  })
+
   it('has no placeholder copy', () => {
     expect(html).not.toContain('v1 is on its way')
   })
