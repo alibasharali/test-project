@@ -3,7 +3,7 @@ item: 1
 type: feature
 title: "v1: Hello world front page"
 status: draft
-branch: claude/dreamy-knuth-jha9nt
+branch: claude/1-hello-world
 ---
 
 # v1: Hello world front page
