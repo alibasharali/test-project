@@ -14,7 +14,7 @@ The item number comes from the argument or from the session's opening payload (`
 
 If the factory MCP server is unreachable, say so and stop: board state would drift without it.
 
-**Keep the board live.** The board shows a spinner with your latest `report_progress` line while you work. Call `report_progress(N, "<one line>")` at each milestone (facts gathered, spec drafted, each slice started, checks, verification, PR) and right after the developer answers you. Whenever you stop to wait for the developer, call `request_attention` first, so the board says "Needs you" instead of spinning.
+**Keep the board live.** The board shows a spinner with your latest `report_progress` line while you work. Call `report_progress(N, "<one line>")` at each milestone (facts gathered, spec drafted, each slice started, checks, verification, PR) and right after the developer answers you. Whenever you stop to wait for the developer, the board must say "Needs you" instead of spinning: questions go through `ask_questions` (which does that), anything else through `request_attention`.
 
 ## 2. Find where it stands
 
