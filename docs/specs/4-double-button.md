@@ -2,7 +2,7 @@
 item: 4
 type: feature
 title: "Multiply button"
-status: draft
+status: approved
 branch: claude/4-double-button
 ---
 
