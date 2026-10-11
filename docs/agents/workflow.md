@@ -33,7 +33,7 @@ Item types: **feature** runs the full flow. **bug** and **chore** get a short sp
 ## Steps
 
 1. **Start.** The factory fires a session with the item. The `item` skill reads it (`get_item`), finds where it stands, and resumes.
-2. **Spec** (`write-spec`). Features: grill the developer on every open decision, with a recommendation each time, then write and push the spec. Bugs/chores: a short spec, no grilling.
+2. **Spec** (`write-spec`). Features: grill the developer on every open decision in rounds of questions on the item page (options, a recommendation, free text), then write and push the spec. Bugs/chores: a short spec, no grilling.
 3. **Gate** (features only). The developer reads the spec and approves it: by saying "approved" in the session, or with **Approve** on the item page, which records the spec's blob SHA and starts a fresh session. No production code before that.
 4. **Implement** (`implement-spec`). The session orchestrates: a fresh `slice-implementer` builds each slice test-first, the orchestrator commits, a `slice-reviewer` checks it.
 5. **Verify.** All checks green (`.claude/check.sh`), then the `verifier` subagent checks every acceptance criterion against the running app and returns a summary. Nothing is written to the repo.
