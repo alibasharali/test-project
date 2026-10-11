@@ -6,7 +6,7 @@ Ledger for the orchestrator. Survives compaction and session restarts: the `item
 
 | Slice | Status | Commits | Review | Interfaces for later slices |
 |---|---|---|---|---|
-| S1 | review | `33d16ff..03423d3` | pending | `decrement(n)` in counter.ts; Counter renders Decrement, Increment, count |
+| S1 | done | `33d16ff..03423d3` | CLEAN | `decrement(n)` in counter.ts; Counter renders Decrement, Increment, count |
 
 ## Rulings
 
