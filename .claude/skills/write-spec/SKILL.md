@@ -17,7 +17,7 @@ Done when you can name every module the item will change.
 
 Interview the developer until nothing is left silently assumed. Map the open decisions as a tree: each decision unlocks the ones that hang off it.
 
-- Work in **rounds**. Ask every question whose prerequisites are settled, numbered, each with your recommended answer. Wait for the answers, then ask the next round.
+- Work in **rounds**. Ask every question whose prerequisites are settled, numbered, each with your recommended answer. Call `request_attention(N, "Questions for you in the session")`, wait for the answers, then `report_progress(N, "Grilling: round <k> answered")` and ask the next round.
 - Never ask for a fact you can look up; look it up.
 - Cover: **domain rules** (push hardest here: edge cases, empty states, what happens to existing data), **user experience** (who does what, where, in what order), **scope boundary**, **data** (new fields, migrations, existing rows), and **test seams** (which test proves each behaviour).
 
@@ -36,7 +36,7 @@ Fill in [spec-template.md](spec-template.md) as `docs/specs/<n>-<slug>.md`, with
 
 ## 4. Publish
 
-1. Commit `docs(spec): #<n> <title>` and push the branch.
+1. `report_progress(N, "Writing the spec")` before you start writing. Commit `docs(spec): #<n> <title>` and push the branch.
 2. `attach_spec(N, path, summary, branch)` with a three-line summary.
 
 Done when the pushed spec is `status: draft` (features) or `status: approved` (bugs and chores, which have no gate) and the item links it.
