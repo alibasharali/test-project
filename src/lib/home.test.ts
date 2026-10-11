@@ -30,6 +30,12 @@ describe('home page', () => {
     expect(html.indexOf('>Increment<')).toBeLessThan(html.indexOf('<output'))
   })
 
+  it('renders Double after Increment and before the counter', () => {
+    expect(html).toMatch(/<button[^>]*>Double<\/button>/)
+    expect(html.indexOf('>Increment<')).toBeLessThan(html.indexOf('>Double<'))
+    expect(html.indexOf('>Double<')).toBeLessThan(html.indexOf('<output'))
+  })
+
   it('has no placeholder copy', () => {
     expect(html).not.toContain('v1 is on its way')
   })
