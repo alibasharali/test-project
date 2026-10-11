@@ -2,7 +2,7 @@
 item: 3
 type: feature
 title: "Decrement button"
-status: draft
+status: approved
 branch: claude/3-decrement-button
 ---
 
