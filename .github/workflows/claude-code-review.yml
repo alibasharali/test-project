@@ -66,6 +66,8 @@ jobs:
             2. `docs/agents/workflow.md`: the definition of done and the guardrails.
             3. The item's spec, if the PR names one (`docs/specs/<n>-*.md`): every AC implemented
                and tested, domain decisions followed, nothing from "Out of scope" built.
+            4. `.factory/stack.json`: a diff that adds or removes a framework, database, service or
+               hosting changes it in the same PR, with `docs/agents/stack.md` to match.
 
             Report only real, specific problems you are confident about: correctness bugs and edge
             cases, breaches of documented conventions, security, missing tests or tests changed to

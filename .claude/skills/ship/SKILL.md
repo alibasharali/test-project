@@ -36,7 +36,7 @@ Run the `lesson` skill on each one that doesn't already have a `chore(lesson)` c
 ## 5. Open the PR
 
 1. `git push -u origin HEAD`.
-2. Fill in [pr-template.md](pr-template.md) and call `open_pull_request(N, branch, title, body)` with title `<type>: <item title> (#<n>)`. The factory opens the PR into `develop`, enables auto-merge and moves the item to *In review*.
+2. Fill in [pr-template.md](pr-template.md) and call `open_pull_request(N, branch, title, body)` with title `<type>: <item title> (#<n>)`. The factory opens the PR into `develop`, turns on auto-merge where GitHub allows it, and moves the item to *In review*.
 3. If the tool fails, give the developer the branch and the PR body, and ask them to open it.
 
 ## 6. Hand over

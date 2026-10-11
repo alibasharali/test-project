@@ -38,7 +38,7 @@ An **idea** is never worked on: tell the developer to promote it to a feature, b
 
 ## 4. Spec
 
-Invoke `write-spec` for item N. Done when the spec is committed and pushed, and attached with `attach_spec`.
+If the item's description asks for the `bootstrap` skill (a new project's first item) or the `onboard` skill (an imported repo's first item), invoke it instead: each gathers its facts and then uses `write-spec` itself. Otherwise invoke `write-spec` for item N. Done when the spec is committed and pushed, and attached with `attach_spec`.
 
 ## 5. Gate (features only)
 
@@ -63,4 +63,6 @@ Invoke `implement-spec`. Done when every acceptance criterion is verified.
 
 ## 7. Ship
 
-Invoke `ship`. Done when the PR is open and the developer has the link. GitHub auto-merges into `develop` when CI and review pass; you never merge.
+Invoke `ship`. Done when the PR is open and the developer has the link. `open_pull_request` says whether auto-merge is on. If it is, GitHub merges into `develop` when CI and review pass; if not (a private repo without GitHub Pro), tell the developer to press **Merge** on the item in the factory once the checks are green. You never merge.
+
+**Nothing to ship:** when the item's whole result lives outside this repo (a stack proposal, factory tool calls) and the branch has no commits beyond `develop`, open no PR. Say what was done, with links, and tell the developer to press **Close without deploying** on the item in the factory. Don't `request_attention` for it.

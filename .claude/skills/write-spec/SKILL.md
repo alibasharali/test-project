@@ -39,6 +39,7 @@ Fill in [spec-template.md](spec-template.md) as `docs/specs/<n>-<slug>.md`, with
 - Every acceptance criterion is observable from outside: Given/When/Then with concrete values.
 - Every slice is vertical (data → server → UI for one behaviour) and lists the ACs it satisfies. Slice order is build order.
 - Name modules and behaviour, not file paths or code, except for a schema or state shape a decision depends on.
+- **Stack changes**: a new framework, database, auth, hosting or third-party service is a stack change, and so is dropping one. Name it, with its registry id (`get_stack`) or in words, and follow the registry's guidelines for it. The slice that brings it in also updates `.factory/stack.json` and the files `render_stack_files` returns.
 
 ## 4. Publish
 
