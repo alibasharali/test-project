@@ -15,7 +15,7 @@ Work items live on the project's board in **Software Factory**, not in GitHub Is
 |---|---|---|
 | Backlog | item exists, no work started | — |
 | Spec | agent is grilling the developer and writing the spec | agent |
-| Ready to build | the developer approved the spec in the session | agent, on the developer's word |
+| Ready to build | the developer approved the spec, in the session or with the factory's approve button | agent on the developer's word, or the factory on the button |
 | In progress | slices being implemented | agent |
 | In review | PR to `develop` open; CI and Claude review running | factory, when the agent opens the PR |
 | On dev | PR merged into `develop` and deployed to dev | factory (GitHub webhook) |
@@ -34,7 +34,7 @@ Item types: **feature** runs the full flow. **bug** and **chore** get a short sp
 
 1. **Start.** The factory fires a session with the item. The `item` skill reads it (`get_item`), finds where it stands, and resumes.
 2. **Spec** (`write-spec`). Features: grill the developer on every open decision, with a recommendation each time, then write and push the spec. Bugs/chores: a short spec, no grilling.
-3. **Gate** (features only). The developer reads the spec and says "approved" in the session. No production code before that.
+3. **Gate** (features only). The developer reads the spec and approves it: by saying "approved" in the session, or with **Approve** on the item page, which records the spec's blob SHA and starts a fresh session. No production code before that.
 4. **Implement** (`implement-spec`). The session orchestrates: a fresh `slice-implementer` builds each slice test-first, the orchestrator commits, a `slice-reviewer` checks it.
 5. **Verify.** All checks green (`.claude/check.sh`), then the `verifier` subagent checks every acceptance criterion against the running app and returns a summary. Nothing is written to the repo.
 6. **Ship** (`ship`). Review the branch in a fresh subagent and fix findings, run the retro (`lesson`), push, and open the PR through `open_pull_request`. The factory enables auto-merge and moves the item to *In review*.
