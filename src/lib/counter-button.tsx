@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { decrement, increment } from './counter'
+import { decrement, double, increment } from './counter'
 
 export function Counter() {
   const [count, setCount] = useState(0)
@@ -18,6 +18,13 @@ export function Counter() {
         onClick={() => setCount(increment)}
       >
         Increment
+      </button>
+      <button
+        type="button"
+        className="rounded border px-3 py-1"
+        onClick={() => setCount(double)}
+      >
+        Double
       </button>
       <output aria-live="polite">{count}</output>
     </div>
