@@ -24,6 +24,12 @@ describe('home page', () => {
     expect(html).toMatch(/<output[^>]*>0<\/output>/)
   })
 
+  it('renders Decrement before Increment', () => {
+    expect(html).toMatch(/<button[^>]*>Decrement<\/button>/)
+    expect(html.indexOf('>Decrement<')).toBeLessThan(html.indexOf('>Increment<'))
+    expect(html.indexOf('>Increment<')).toBeLessThan(html.indexOf('<output'))
+  })
+
   it('has no placeholder copy', () => {
     expect(html).not.toContain('v1 is on its way')
   })
