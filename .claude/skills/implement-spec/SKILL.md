@@ -19,7 +19,7 @@ Call `update_item_status(N, "in_progress")` if the item isn't there yet.
 
 ## 1. Each slice, in spec order, one at a time
 
-1. `BASE=$(git rev-parse HEAD)`. Set the slice to `running` in the ledger.
+1. `BASE=$(git rev-parse HEAD)`. Set the slice to `running` in the ledger and `report_progress(N, "Slice <k>/<total>: <slice name>")`.
 2. **Brief** a `slice-implementer` (foreground). It sees nothing but the brief:
    - **Objective:** the slice text, every AC it satisfies, and the domain decisions those ACs rest on, all verbatim.
    - **Sources:** the spec path, the *Test seams* rows for these ACs, the ledger's *Interfaces* from earlier slices, rulings that touch this slice.
@@ -37,7 +37,7 @@ If the spec turns out wrong or incomplete, stop and ask the developer. The spec 
 
 ## 2. Full checks
 
-Run `.claude/check.sh` yourself. A red result goes back to a `slice-implementer` as a fix brief, never to you.
+`report_progress(N, "Full checks")`, then run `.claude/check.sh` yourself. A red result goes back to a `slice-implementer` as a fix brief, never to you.
 
 ## 3. Verify
 
