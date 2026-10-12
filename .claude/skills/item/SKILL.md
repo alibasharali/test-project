@@ -28,11 +28,11 @@ Resume instead of restarting. Jump to the first step that isn't done:
 - the branch `claude/<n>-*` exists → switch to it, then step 4
 - nothing → step 3
 
-An **idea** is never worked on: tell the developer to promote it to a feature, bug or chore first, and stop.
+An **idea** is never worked on: tell the developer to promote it to a feature, bug or chore first, and stop. The same goes for an **issue** item: it is worked on once the developer triages it on the board.
 
 ## 3. Branch
 
-1. `git fetch origin develop && git switch -c claude/<n>-<slug> origin/develop`. The slug is 2–4 ASCII kebab-case words from the title.
+1. `git fetch origin <base> && git switch -c claude/<n>-<slug> origin/<base>`, where `<base>` is `get_item`'s `delivery.baseBranch` (`develop` or `main`). The slug is 2–4 ASCII kebab-case words from the title.
    Cloud sessions start on an auto-named branch (`claude/<adjective>-<name>-…`). Don't use it: the factory only links `claude/<n>-<slug>`, and a restarted session must find the same branch again.
 2. Move the item: `update_item_status(N, "spec")` for features, `update_item_status(N, "in_progress")` for bugs and chores.
 
@@ -63,6 +63,6 @@ Invoke `implement-spec`. Done when every acceptance criterion is verified.
 
 ## 7. Ship
 
-Invoke `ship`. Done when the PR is open and the developer has the link. `open_pull_request` says whether auto-merge is on. If it is, GitHub merges into `develop` when CI and review pass; if not (a private repo without GitHub Pro), tell the developer to press **Merge** on the item in the factory once the checks are green. You never merge.
+Invoke `ship`. Done when the PR is open and the developer has the link. `open_pull_request` says whether auto-merge is on. If it is, GitHub merges into the base branch when CI and review pass; if not (a private repo without GitHub Pro, or a preset where the merge ships), tell the developer to press **Merge** on the item in the factory once the checks are green. You never merge.
 
-**Nothing to ship:** when the item's whole result lives outside this repo (a stack proposal, factory tool calls) and the branch has no commits beyond `develop`, open no PR. Say what was done, with links, and tell the developer to press **Close without deploying** on the item in the factory. Don't `request_attention` for it.
+**Nothing to ship:** when the item's whole result lives outside this repo (a stack proposal, factory tool calls) and the branch has no commits beyond the base branch, open no PR. Say what was done, with links, and tell the developer to press **Close without deploying** on the item in the factory. Don't `request_attention` for it.

@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Bring a repo imported into Software Factory up to what a newly created factory project has (checks, PR CI, dev/prod deploys, URLs on the board, agent instructions). Use for the "Onboard into the factory" item, in place of item step 4.
+description: Bring a repo imported into Software Factory up to what a newly created factory project has (checks, PR CI, what its delivery preset needs, URLs on the board, agent instructions). Use for the "Onboard into the factory" item, in place of item step 4.
 ---
 
 # Onboard
@@ -21,7 +21,8 @@ Read `docs/agents/project-standard.md`, then gather these before asking anything
 
 ## 2. Hosting
 
-- **Already deployed** (a workflow deploys it, or it is clearly hosted somewhere): keep it. Make sure both branches deploy and the deploying job sets the environment names. If `develop` has no deploy, ask whether to add a dev deployment on the same platform.
+- **The delivery preset decides what's needed** (`get_item` → `delivery`). *Releases* and *Merge only* need no hosting: check the release workflow (Releases) and skip the rest of this section. If what the repo does doesn't fit the preset (a repo that deploys but was imported as Merge only, say), ask the developer; the preset changes on the factory's setup page.
+- **Already deployed** (a workflow deploys it, or it is clearly hosted somewhere): keep it. Make sure the preset's branches deploy (`develop` and `main` in Dev and prod, `main` in Straight to prod) and the deploying job sets the environment names. In Dev and prod, if `develop` has no deploy, ask whether to add a dev deployment on the same platform.
 - **Not deployed**: Cloudflare Workers is the default, and the only platform the factory provisions. It fits static sites and SPAs (static assets), Workers-compatible SSR (TanStack Start, Astro, React Router, Hono, Next.js through OpenNext) and APIs; a SQL database becomes D1 (SQLite).
 - **Doesn't fit Workers** (long-running servers, native dependencies, a database D1 can't replace): ask with options. Port to Workers; deploy elsewhere (you write the workflow; the factory only reads the environment names); or no deploys yet, only check.sh and PR CI.
 - **Runtime secrets**: list the names the app needs. Never invent values: the developer adds them (`wrangler secret put`, or Actions secrets), so use `request_attention` when one is missing.
