@@ -1,13 +1,13 @@
 ---
 name: ship
-description: Ship a finished item branch: review it in a fresh context, run the retro, push, and open the PR into develop through the factory. Use when an item's implementation and verification are done, or the user says "ship", "open a PR" or "create the PR".
+description: Ship a finished item branch: review it in a fresh context, run the retro, push, and open the PR into the base branch through the factory. Use when an item's implementation and verification are done, or the user says "ship", "open a PR" or "create the PR".
 ---
 
 # Ship
 
 ## 1. Preconditions
 
-- You are on `claude/<n>-*`, never on `develop` or `main`.
+- You are on `claude/<n>-*`, never on the base branch (`get_item`'s `delivery.baseBranch`) or `main`.
 - The working tree is clean.
 - The ledger's *Verification* is `done`. If not, go back to `implement-spec` step 3.
 
@@ -17,7 +17,7 @@ Run `.claude/check.sh`. Red sends you back to fixing, never forward.
 
 ## 3. Review in a fresh context
 
-Dispatch a general-purpose subagent to review `git diff origin/develop...HEAD` against the spec, `CLAUDE.md`, `.claude/rules/` and `docs/agents/review-policy.md`. It reports findings only: correctness, missing or untested ACs, scope creep, security, convention breaches. No style, no praise.
+Dispatch a general-purpose subagent to review `git diff origin/<base>...HEAD` against the spec, `CLAUDE.md`, `.claude/rules/` and `docs/agents/review-policy.md`. It reports findings only: correctness, missing or untested ACs, scope creep, security, convention breaches. No style, no praise.
 
 Classify every finding with the review policy:
 
@@ -36,7 +36,7 @@ Run the `lesson` skill on each one that doesn't already have a `chore(lesson)` c
 ## 5. Open the PR
 
 1. `git push -u origin HEAD`.
-2. Fill in [pr-template.md](pr-template.md) and call `open_pull_request(N, branch, title, body)` with title `<type>: <item title> (#<n>)`. The factory opens the PR into `develop`, turns on auto-merge where GitHub allows it, and moves the item to *In review*.
+2. Fill in [pr-template.md](pr-template.md) and call `open_pull_request(N, branch, title, body)` with title `<type>: <item title> (#<n>)`. The factory opens the PR into the base branch, turns on auto-merge where the preset and GitHub allow it, and moves the item to *In review*. Where the preset makes the merge ship (Straight to prod, Merge only), the developer merges; the tool's `next` says so.
 3. If the tool fails, give the developer the branch and the PR body, and ask them to open it.
 
 ## 6. Hand over

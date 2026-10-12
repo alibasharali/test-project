@@ -11,7 +11,7 @@ The factory created the repo with the agent kit and `docs/agents/stack.md`: the 
 
 - The item description: what v1 is, in the developer's words, and the stack summary.
 - `docs/agents/stack.md`: each picked option's guidelines, secrets, docs links and free-tier limits, plus anything described in words that isn't in the registry yet.
-- `docs/agents/project-standard.md`: what every factory repo needs (check.sh, the `check` job, dev/prod deploys with environment names, board URLs, instructions in `AGENTS.md`).
+- `docs/agents/project-standard.md`: what every factory repo needs (check.sh, the `check` job, what the delivery preset needs, board URLs, instructions in `AGENTS.md`).
 - The repo tree. With a recipe, its `AGENTS.md` and `.claude/check.sh` already meet most of the standard.
 
 ## 1b. Deciding the stack (auto only)
@@ -23,6 +23,17 @@ When the item says the stack is auto, `.factory/stack.json` is empty and the rep
 3. What the registry lacks goes in words under the category whose description fits it best. If none fits, use the nearest and say so in the question.
 4. The first `ask_questions` round opens with **"Proposed stack"**: your proposal (recommended) and one or two real alternatives, each listing the pick per category, why, and the costs; add separate questions only where a single choice is close. Nothing is scaffolded before the answer.
 5. The approved stack becomes the spec's first domain decisions. The scaffold slice writes it to `.factory/stack.json` and commits the files `render_stack_files` returns; hosting on Cloudflare starts with `provision_hosting`, as the project standard's last section says. Anything described in words is proposed to the registry in the last slice (step 4).
+
+## 1c. Reviewing a picked stack (chosen, not auto)
+
+The developer chose the stack at creation, and the factory only checked that the picks fit together. Check that they suit this app before anything is built on them:
+
+- **Fit**: does each pick suit what the description says v1 is (a static site on a server-rendered stack, a desktop app on a web host, a database for an app that stores nothing)?
+- **Maturity**: an `experimental` option where a `proven` one does the same job (`list_stacks()` shows both).
+- **Cost**: anything beyond a free tier, with what it costs.
+- **Overlap**: picks that do the same job twice.
+
+With concerns, the first `ask_questions` round opens with **"Stack review"**: keep the picks, or your alternative (recommended when you'd change it), each with the reason and the cost. One question per concern only when they are independent. Nothing is scaffolded before the answer. Without concerns, say so in one line in your progress report and carry on. You never change the stack on your own: what the developer decides goes in the spec as a domain decision, and the scaffold slice writes it to `.factory/stack.json` with the files `render_stack_files` returns. When a recipe already scaffolded the repo, review the same way; a change becomes rework the spec names.
 
 ## 2. Questions and spec
 
@@ -38,7 +49,7 @@ Then write the spec with `write-spec`. Without a recipe, its first slice is **"S
 - **Other hosting**: the factory can't provision it. Write the deploy workflow with the environment names, list the accounts and secrets it needs, and `request_attention` for the developer to create them. Never sign up for anything or move to a paid plan.
 - Stack skills from the factory are in `.claude/skills/` (listed at the end of stack.md); use them, e.g. for migrations.
 - **Declare it**: `.factory/stack.json` already lists what was picked. Keep it true to what you scaffolded (`render_stack_files` for the matching stack files), and make `.claude/check.sh` run `node .factory/check-stack.mjs`.
-- **Prove it**: `.claude/check.sh` passes and the dev server serves the app. The first real deploy happens when the PR merges into develop; say in the PR that the developer should watch it.
+- **Prove it**: `.claude/check.sh` passes and the dev server serves the app. The first real deploy, where the delivery preset deploys, happens when the PR merges into the base branch; say in the PR that the developer should watch it.
 
 ## 4. Contribute what you learned
 

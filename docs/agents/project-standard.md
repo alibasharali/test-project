@@ -8,9 +8,13 @@ What every factory project has, whatever its stack. Each item that sets a repo u
 
 1. **`.claude/check.sh`**: executable, exits non-zero on failure, runs the checks that matter here (lint, typecheck, tests, build) and is fast enough for every PR and the Stop hook. It also runs `node .factory/check-stack.mjs`.
 2. **PR CI**: a workflow on `pull_request` with a job whose id is `check` that runs `.claude/check.sh`. The factory's Merge button waits for the `check` status.
-3. **Deploys from GitHub Actions**: a push to `develop` deploys dev, a push to `main` deploys prod, and the deploying job sets `environment: dev` or `environment: prod` (`${{ github.ref_name == 'main' && 'prod' || 'dev' }}`). The board moves items to On dev and In prod from those deployments. Nobody deploys by hand.
-4. **URLs on the board**: `set_environment_urls(N, dev_url, prod_url)` once they are known.
-5. **Declared stack**: `.factory/stack.json` lists the stack the code uses (registry option ids, stacks the registry lacks under `described`, and under `ignore`, with a reason, options detection gets wrong here). It is the source of truth: the factory syncs its record from it on every merge into develop, and `.factory/check-stack.mjs` (kit-managed, rules in `.factory/detect.json`) fails when it and the code disagree. Change it in the same PR as the code, with the files `render_stack_files(N, stack_json)` returns.
+3. **Delivery that the board can follow**, per the project's preset (`get_item` → `delivery`, see `workflow.md`). Nobody deploys or publishes by hand.
+   - *Dev and prod*: a push to `develop` deploys dev, a push to `main` deploys prod, and the deploying job sets `environment: dev` or `environment: prod` (`${{ github.ref_name == 'main' && 'prod' || 'dev' }}`).
+   - *Straight to prod*: a push to `main` deploys prod, in a job with `environment: prod`.
+   - *Releases*: publishing a GitHub release runs a workflow that builds and attaches what ships (installers, packages); signing secrets are the developer's.
+   - *Merge only*: nothing beyond PR CI.
+4. **URLs on the board** (presets that deploy): `set_environment_urls(N, dev_url, prod_url)` once they are known, `null` for an environment the preset doesn't have.
+5. **Declared stack**: `.factory/stack.json` lists the stack the code uses (registry option ids, stacks the registry lacks under `described`, and under `ignore`, with a reason, options detection gets wrong here). It is the source of truth: the factory syncs its record from it on every merge into the base branch, and `.factory/check-stack.mjs` (kit-managed, rules in `.factory/detect.json`) fails when it and the code disagree. Change it in the same PR as the code, with the files `render_stack_files(N, stack_json)` returns.
 6. **Instructions** tell an agent how to work here: commands, architecture in a few lines, conventions and traps. New repos keep them in `AGENTS.md` (read by every coding agent) with `CLAUDE.md` importing it; a repo whose `CLAUDE.md` already holds them keeps it there. Add to the existing file; never replace what is there.
 
 ## Reference: the TanStack Start recipe
@@ -80,6 +84,7 @@ After the developer approved a spec that hosts the app on Cloudflare Workers:
      deploy:
        runs-on: ubuntu-latest
        # the factory moves items to On dev / In prod from these environment names
+   # (Straight to prod: drop develop from branches; every run is prod)
        environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
        env:
          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -99,4 +104,4 @@ After the developer approved a spec that hosts the app on Cloudflare Workers:
          - run: npx wrangler deploy $WRANGLER_ENV
    ```
 
-5. Call `set_environment_urls(N, dev_url, prod_url)` with the workers.dev URLs before `ship`. They serve once the PR merges and develop deploys; prod follows the next release.
+5. Call `set_environment_urls(N, dev_url, prod_url)` with the workers.dev URLs before `ship` (`null` for dev in Straight to prod). They serve once the PR merges and the base branch deploys; in Dev and prod, prod follows the next release.
