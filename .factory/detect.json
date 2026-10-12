@@ -1,0 +1,119 @@
+{
+  "$comment": "Managed by Software Factory from its stack registry; overwritten on Update kit.",
+  "rules": [
+    {
+      "id": "cloudflare-access",
+      "label": "Cloudflare Access",
+      "packages": [],
+      "files": [],
+      "content": []
+    },
+    {
+      "id": "cloudflare-workers",
+      "label": "Cloudflare Workers",
+      "packages": [
+        "wrangler"
+      ],
+      "files": [
+        "wrangler.jsonc",
+        "wrangler.json",
+        "wrangler.toml"
+      ],
+      "content": []
+    },
+    {
+      "id": "d1",
+      "label": "Cloudflare D1",
+      "packages": [],
+      "files": [],
+      "content": [
+        {
+          "paths": [
+            "wrangler.jsonc",
+            "wrangler.json",
+            "wrangler.toml"
+          ],
+          "includes": "d1_databases"
+        }
+      ]
+    },
+    {
+      "id": "resend",
+      "label": "Resend",
+      "packages": [
+        "resend"
+      ],
+      "files": [],
+      "content": []
+    },
+    {
+      "id": "sentry",
+      "label": "Sentry",
+      "packages": [
+        "@sentry/react",
+        "@sentry/browser",
+        "@sentry/node",
+        "@sentry/cloudflare"
+      ],
+      "files": [],
+      "content": []
+    },
+    {
+      "id": "shadcn-ui",
+      "label": "shadcn/ui",
+      "packages": [],
+      "files": [
+        "components.json"
+      ],
+      "content": []
+    },
+    {
+      "id": "supabase-auth",
+      "label": "Supabase Auth",
+      "packages": [],
+      "files": [
+        "supabase/templates/"
+      ],
+      "content": []
+    },
+    {
+      "id": "supabase-postgres",
+      "label": "Postgres on Supabase",
+      "packages": [],
+      "files": [
+        "supabase/migrations/"
+      ],
+      "content": []
+    },
+    {
+      "id": "supabase",
+      "label": "Supabase",
+      "packages": [
+        "@supabase/supabase-js",
+        "@supabase/ssr"
+      ],
+      "files": [
+        "supabase/config.toml"
+      ],
+      "content": []
+    },
+    {
+      "id": "tailwind",
+      "label": "Tailwind CSS v4",
+      "packages": [
+        "tailwindcss"
+      ],
+      "files": [],
+      "content": []
+    },
+    {
+      "id": "tanstack-start",
+      "label": "TanStack Start",
+      "packages": [
+        "@tanstack/react-start"
+      ],
+      "files": [],
+      "content": []
+    }
+  ]
+}

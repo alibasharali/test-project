@@ -22,7 +22,7 @@ Everything else. In particular:
 - security: auth, secrets, untrusted input reaching storage or HTML
 - any finding with two or more reasonable fixes, or where you are unsure of the class
 
-Each becomes an inline comment, which leaves an unresolved thread and blocks auto-merge until a human resolves it. Say what is wrong and give your recommended fix.
+Each becomes an inline comment, which leaves an unresolved thread: auto-merge waits until a human resolves it, and without auto-merge the developer sees it before pressing Merge. Say what is wrong and give your recommended fix.
 
 ## Never
 

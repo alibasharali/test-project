@@ -32,6 +32,10 @@ Build in this order. Each slice is vertical and ends with green checks.
 |---|---|---|
 | AC1 | <unit / server function / route / e2e> | <page + steps, or request + expected response> |
 
+## Stack changes
+
+<Stacks this item adds to or removes from `.factory/stack.json` (registry ids from `get_stack`, or in words when the registry lacks one). "None" is a valid answer.>
+
 ## Data and migrations
 
 <New tables, fields and migrations, and what happens to existing rows. "None" is a valid answer.>

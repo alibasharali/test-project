@@ -1,0 +1,11 @@
+{
+  "$comment": "The stack this repo uses; the factory reads it on every merge to develop. Change it in the same PR as the code (.factory/check-stack.mjs enforces it).",
+  "options": [
+    "tanstack-start",
+    "d1",
+    "cloudflare-workers",
+    "tailwind"
+  ],
+  "described": {},
+  "ignore": {}
+}

@@ -17,6 +17,10 @@ Why: one item in one context degrades toward the end. Fresh workers get a precis
 
 Call `update_item_status(N, "in_progress")` if the item isn't there yet.
 
+A slice that is only factory tool calls (`set_environment_urls`, `propose_stack_change`) needs no implementer or reviewer: make the calls yourself, record the result in the ledger, and commit the ledger.
+
+**Stack changes** (the spec's section of that name): in the slice that adds or removes the dependency, include the new `.factory/stack.json` in the brief. After the slice, call `render_stack_files(N, stack_json)` yourself, write the files it returns, delete what the old `.claude/stack-files` listed and the new one doesn't, and commit them with the slice. `.factory/check-stack.mjs` must pass.
+
 ## 1. Each slice, in spec order, one at a time
 
 1. `BASE=$(git rev-parse HEAD)`. Set the slice to `running` in the ledger and `report_progress(N, "Slice <k>/<total>: <slice name>")`.
