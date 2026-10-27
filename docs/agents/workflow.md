@@ -6,7 +6,7 @@ How every change in this repo is made. Managed by Software Factory's agent kit (
 
 ## What Software Factory is
 
-The developer's personal control plane for all their projects. Each project has a board in the factory; each board item is worked on by Claude sessions the factory starts, and moves from idea to production without the developer driving git by hand. The factory scaffolds new projects and imports existing ones, and every project follows this same workflow, so the board, pipelines and releases work the same everywhere. What that relies on, in every repo:
+The developer's personal control plane for all their projects. Each project has a board in the factory; each board item is worked on by Claude sessions the factory starts (or the developer starts from their own clone), and moves from idea to production without the developer driving git by hand. The factory scaffolds new projects and imports existing ones, and every project follows this same workflow, so the board, pipelines and releases work the same everywhere. What that relies on, in every repo:
 
 - items, specs and branches named as below, so the factory can link them;
 - `.claude/check.sh` as the one definition of green, run by agents, hooks and the `check` job on every PR;
@@ -26,12 +26,12 @@ Work items live on the project's board in **Software Factory**, not in GitHub Is
 |---|---|---|
 | Backlog | item exists, no work started | — |
 | Spec | agent is grilling the developer and writing the spec | agent |
-| Ready to build | the developer approved the spec, in the session or with the factory's approve button | agent on the developer's word, or the factory on the button |
+| Ready to build | the developer approved the spec, in the session or with the factory's approve button (or sent it back with **Request changes**) | agent on the developer's word, or the factory on the button |
 | In progress | slices being implemented | agent |
 | In review | PR into the base branch open; CI and Claude review running | factory, when the agent opens the PR |
 | delivery columns | see the preset | factory (GitHub webhooks) |
 
-Item types: **feature** runs the full flow. **bug** and **chore** get a short spec with no grilling and no approval gate, and start at *In progress*. **idea** stays in Backlog until the developer promotes it. **issue** came from a GitHub issue and stays in Backlog until the developer triages it; once it's a feature, bug or chore it keeps the link, the factory adds `Refs #N` to its PR and closes the issue when the work is delivered.
+Item types: **feature** runs the full flow. **bug** and **chore** get a short spec with no grilling and no approval gate, and start at *In progress*. **idea** stays in Backlog until the developer promotes it (or full auto does, below). **issue** came from a GitHub issue and stays in Backlog until the developer triages it; once it's a feature, bug or chore it keeps the link, the factory adds `Refs #N` to its PR and closes the issue when the work is delivered.
 
 ## Delivery
 
@@ -57,21 +57,39 @@ Deploys report through GitHub Actions jobs with `environment: dev` / `prod`; rel
 
 ## Steps
 
-1. **Start.** The factory fires a session with the item. The `item` skill reads it (`get_item`), finds where it stands, and resumes.
+1. **Start.** The factory fires a session with the item, or the developer starts one in their own clone with the command **Start locally** shows on the item page. The `item` skill reads it (`get_item`), finds where it stands, and resumes.
 2. **Spec** (`write-spec`). Features: grill the developer on every open decision in rounds of questions on the item page (options, a recommendation, free text), then write and push the spec. Bugs/chores: a short spec, no grilling. A new project's first item uses `bootstrap`, which agrees with the developer where to start (a proof of concept of the riskiest part, or the smallest thing that runs end to end), scaffolds the picked stack when no tested recipe did, turns the rest of the description into ideas, and records what it learned about stacks the factory doesn't know yet. An imported repo's first item uses `onboard` first, which specs what the repo lacks compared with a new factory project (checks, PR CI, what its delivery preset needs, URLs, `CLAUDE.md`).
-3. **Gate** (features only). The developer reads the spec and approves it: by saying "approved" in the session, or with **Approve** on the item page, which records the spec's blob SHA and starts a fresh session. No production code before that.
+3. **Gate** (features only). The developer reads the spec and approves it: by saying "approved" in the session, or with **Approve** on the item page, which records the spec's blob SHA and starts a fresh session (on a local item, below, it starts none). No production code before that. Under full auto the session approves its own spec unless it changes the stack (below).
 4. **Implement** (`implement-spec`). The session orchestrates: a fresh `slice-implementer` builds each slice test-first, the orchestrator commits, a `slice-reviewer` checks it.
-5. **Verify.** All checks green (`.claude/check.sh`), then the `verifier` subagent checks every acceptance criterion against the running app and returns a summary. Nothing is written to the repo.
+5. **Verify.** All checks green (`.claude/check.sh`), then the `verifier` subagent checks every acceptance criterion against the running app and returns a summary. When the branch changes user-visible UI, the `ux-reviewer` subagent then looks at the change on the running app (screenshots and DOM measurements at 320/768/1280 px, light and dark) against `docs/agents/ux-standard.md`; must-fix findings go back for at most two `fix(ux)` rounds, polish is listed in the PR. Otherwise the step is skipped with a one-line reason. Nothing is written to the repo.
 6. **Ship** (`ship`). Review the branch in a fresh subagent and fix findings, run the retro (`lesson`), push, and open the PR through `open_pull_request`. The factory moves the item to *In review* and turns on auto-merge where the preset and GitHub allow it.
 7. **Review.** CI and the Claude review run on the PR. The review fixes unambiguous findings (`fix(review): …`) and leaves an unresolved thread for everything else. Reply `@claude <what you want>` in a thread to have Claude fix it. Then the PR merges into the base branch (squash) one of two ways: GitHub auto-merges it once CI and the review pass and every thread is resolved, where the preset allows it and the repo has rulesets (public repos, or GitHub Pro); otherwise the developer presses **Merge** on the item in the factory, which only merges with the required checks green. Agents never merge.
 8. **Deliver.** Per the preset: the developer tests on dev and merges the release PR, a deploy or a published release ships it, or the merge itself was the delivery.
+
+## Local items
+
+The developer can work an item from their own clone instead of a cloud session: **Start locally** on the item page puts the item in local mode and shows a `claude '…'` command to run in the clone (with `FACTORY_URL`, `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` set, as the project's setup page shows under *Work locally*). While an item is local the board starts no sessions for it and lights-out leaves it alone: answers, **Request changes** and **Approve** are recorded, and the developer types `continue` in the local session, which re-reads `get_item` and carries on. Sessions act on local mode only when `get_item` returns `workMode: "local"`; they first check that the clone is the project's repo. **Switch to cloud** (or starting a cloud session) ends local mode.
+
+## Other sessions
+
+Several items can be worked on at once. `get_item` returns `fleet`: every other active item, the files its branch changes, where they overlap yours, and the notes its session posted (`post_note`). Sessions plan around overlaps rather than asking the developer: `write-spec` reads the fleet and notes its planned paths, `implement-spec` re-reads it before each slice and again after each slice is pushed and notes changes to shared files, and both `implement-spec` and `ship` merge the base branch when `fleet.you.baseTouched` says it changed files of yours. Each entry also carries the other session's latest progress line, and `get_item` marks what changed since this item's previous call (`changes`, `left`, `new` notes); sessions read those first.
+
+## Full auto
+
+The developer can run lights-out (the factory working through the board unattended, one item at a time or up to five at once as the developer sets it, each in its own session) with **Full auto**. It then also takes features in *Spec* and items in *Backlog* (never issues, nor a project's first `bootstrap` or `onboard` item), and the session works without the developer:
+
+- an idea is promoted (`promote_item`) or declined (`decline_idea`) by the session;
+- grilling rounds are answered at once with the session's recommendations;
+- the session approves its own spec and builds it in the same session.
+
+Money, secrets and stack changes stay the developer's: such a round is asked `for_developer`, a spec with a stack change waits for their approval, and lights-out waits on the item meanwhile. Sessions act on full auto only when `get_item` returns `fullAuto: true`. Every decision it made is on the item's timeline and in the PR's *Decided by full auto* section.
 
 ## Guardrails
 
 | Layer | What it enforces |
 |---|---|
 | Code | `.claude/check.sh` (tests, typecheck, build: project-defined) |
-| Harness (`.claude/settings.json`) | no reading secrets (`.env*`, `.dev.vars*`); Stop hook runs `.claude/check.sh` |
+| Harness (`.claude/settings.json`) | no reading secrets (`.env*`, `.dev.vars*`): `.claude/local-env.sh` is the one way to create a missing local env file, from its committed example; Stop hook runs `.claude/check.sh` |
 | GitHub | With rulesets (public repos, or GitHub Pro): the base branch needs a PR, CI and Claude review green, conversations resolved, squash merge; in Dev and prod, `main` needs a PR, CI green, merge commit only (keeps develop's history in main), human merge. Without rulesets (private repos on GitHub Free) nothing is enforced on GitHub: the same rules hold because merges go through the factory's Merge buttons, so never push to `develop` or `main` directly |
 | Factory | agents move items one column forward at most, never into the delivery columns |
 

@@ -5,7 +5,7 @@ description: Implement an approved item spec slice by slice through fresh subage
 
 # Implement spec
 
-You are the **orchestrator**. You write no production code yourself. A fresh `slice-implementer` builds each slice, a `slice-reviewer` checks it, and a `verifier` checks the result on the running app. You hold the spec, the ledger and the developer's rulings; you are the only one who talks to the developer, and **the only one who commits**.
+You are the **orchestrator**. You write no production code yourself. A fresh `slice-implementer` builds each slice, a `slice-reviewer` checks it, a `verifier` checks the result on the running app, and a `ux-reviewer` checks how changed UI looks. You hold the spec, the ledger and the developer's rulings; you are the only one who talks to the developer, and **the only one who commits**.
 
 Why: one item in one context degrades toward the end. Fresh workers get a precise brief and nothing else; you stay small enough to think.
 
@@ -15,7 +15,11 @@ Why: one item in one context degrades toward the end. Fresh workers get a precis
 - The spec says `status: approved`. Otherwise stop and hand back to the gate in the `item` skill: approval is the developer's call.
 - Ledger `docs/specs/<n>-<slug>/progress.md`: if it exists, resume from the first slice not `done`. If not, create it from [ledger-template.md](ledger-template.md), one row per slice, `todo`.
 
+**Ready tree:** before the first slice, run the project's dependency install yourself, in the foreground (see `docs/agents/stack.md`; e.g. `npm ci`), and read its exit status and output. If a postinstall step failed (a blocked download, a native module), fix it (e.g. `npm rebuild <pkg>`) or ask the developer. Workers get a ready tree and must not reinstall. Never wait on a process with `pgrep -f` or `ps | grep` (it matches the waiting shell itself) and never background-then-wait; use exit statuses or result files.
+
 Call `update_item_status(N, "in_progress")` if the item isn't there yet.
+
+**Background workers:** the harness may run any dispatched worker (`slice-implementer`, `slice-reviewer`, `verifier`, `ux-reviewer`) in the background, whatever you asked for. When one comes back running, end your turn with one line saying what you're waiting for (e.g. "Waiting for the S2 implementer."), and don't touch the tree or git until that worker's report arrives: it wakes you.
 
 A slice that is only factory tool calls (`set_environment_urls`, `create_item`, `propose_stack_change`) needs no implementer or reviewer: make the calls yourself, record the result in the ledger, and commit the ledger.
 
@@ -23,19 +27,21 @@ A slice that is only factory tool calls (`set_environment_urls`, `create_item`, 
 
 ## 1. Each slice, in spec order, one at a time
 
-1. `BASE=$(git rev-parse HEAD)`. Set the slice to `running` in the ledger and `report_progress(N, "Slice <k>/<total>: <slice name>")`.
-2. **Brief** a `slice-implementer` (foreground). It sees nothing but the brief:
+1. **Fleet.** Call `get_item(N)` again and read what is marked changed first (`fleet.since`, each item's `changes`, `fleet.left`, notes with `new: true`). If `fleet.you.baseTouched` is non-empty, the base branch changed your files: `git fetch origin <base> && git merge origin/<base>`, resolve any conflict, and push. When the slice's plan changes files other items touch (a rename, a schema change, a moved module), `post_note(N, text, paths)` with what changes. Plan around overlaps; never ask the developer about one.
+2. `BASE=$(git rev-parse HEAD)`. Set the slice to `running` in the ledger and `report_progress(N, "Slice <k>/<total>: <slice name>")`.
+3. **Brief** a `slice-implementer`. It sees nothing but the brief:
    - **Objective:** the slice text, every AC it satisfies, and the domain decisions those ACs rest on, all verbatim.
-   - **Sources:** the spec path, the *Test seams* rows for these ACs, the ledger's *Interfaces* from earlier slices, rulings that touch this slice.
+   - **Sources:** the spec path, the *Test seams* rows for these ACs, the ledger's *Interfaces* from earlier slices, rulings that touch this slice, and the image numbers the slice depends on (from `get_item`'s `images`, or `[image N]` in the spec).
    - **Boundaries:** the spec's *Out of scope*, other slices' ACs ("not yours").
    - **Output:** the report shape from its definition. Tell it not to commit.
-3. **BLOCKED:** don't answer for the developer. Ask them with `ask_questions` (the worker's options, your recommendation, notes on where the slice stands) and hand over as `write-spec` describes; the answers come back here (`record_answers`) or in a new session that resumes from the ledger. Record the ruling in the ledger. If it changes the spec, commit `docs(spec): …` first. Resume the **same** implementer with the ruling verbatim.
-4. **DONE:** compare `git status` with the reported *Changed files*: nothing outside the slice, no scratch files. Commit `feat(<area>): S<n> <slice name> (#<n>)`. Record `BASE..HEAD` and the *Interfaces* in the ledger. Brief a `slice-reviewer` with the spec path, slice, ACs, seams and range.
-5. **Route the review:**
-   - `CLEAN` → step 6.
+4. **BLOCKED:** don't answer for the developer. Ask them with `ask_questions` (the worker's options, your recommendation, notes on where the slice stands) and hand over as `write-spec` describes (under full auto the round comes back answered with your recommendation unless it is `for_developer`: record the ruling and carry on); the answers come back here (`record_answers`) or in a new session that resumes from the ledger (on a local item, `get_item` returning `workMode: "local"`, they come back here when the developer types `continue`, as `item` describes). Record the ruling in the ledger. If it changes the spec, commit `docs(spec): …` first. Resume the **same** implementer with the ruling verbatim.
+5. **DONE:** compare `git status` with the reported *Changed files*: nothing outside the slice, no scratch files. Put back with `git checkout -- <path>` any change to a file the slice may not edit (a formatter's rewrite of kit files, `.github/workflows/`, `.claude/`) rather than committing it. Commit `feat(<area>): S<n> <slice name> (#<n>)`. Record `BASE..HEAD` and the *Interfaces* in the ledger. Brief a `slice-reviewer` with the spec path, slice, ACs, seams and range.
+6. **Route the review:**
+   - `CLEAN` → step 7.
    - `FIX` → resume the same implementer with the findings verbatim, commit `fix(review): <what>`, re-review the new range. At most two rounds; what's left becomes a question for the developer.
    - `HUMAN` → ask the developer with the reviewer's options, record the ruling, and send any code change to the implementer as a fix round.
-6. Set the slice to `done`, commit the ledger `docs(ledger): S<n> done (#<n>)`, and push. Pushing after each slice means a restarted session loses nothing.
+7. Set the slice to `done`, commit the ledger `docs(ledger): S<n> done (#<n>)`, and push. Pushing after each slice means a restarted session loses nothing.
+8. **Fleet again.** Call `get_item(N)` and read what is marked changed since step 1. If `fleet.you.baseTouched` is non-empty, merge the base as in step 1. When an item joined or moved onto files of the next slice, or a new note names them, re-plan that slice around the overlap. `post_note` only under step 1's rule. Never ask the developer about an overlap.
 
 If the spec turns out wrong or incomplete, stop and ask the developer. The spec is corrected first, in its own commit, then the code follows. They must never disagree.
 
@@ -45,10 +51,26 @@ If the spec turns out wrong or incomplete, stop and ask the developer. The spec 
 
 ## 3. Verify
 
-Green checks are not verification. Brief the `verifier` with the spec path and the *Test seams and verification* table.
+Green checks are not verification. Run `.claude/local-env.sh` first: it creates the app's missing local env files from their committed examples. If it refuses because a file isn't gitignored, add that file to `.gitignore`, commit `chore: gitignore <file>`, and run it again. Then brief the `verifier` with the spec path and the *Test seams and verification* table.
 
-- `ALL PASS` → keep its summary for the PR, and `post_verification(N, summary)`.
+- `ALL PASS` → keep its summary for the PR and set the ledger's *Verification* to `done`. Don't post it yet: step 4 does, once.
 - `FAILED` → each failed AC is a bug: brief a `slice-implementer` with the AC and what the verifier saw, review the fix, then re-verify the failed ACs only.
-- `BLOCKED` → fix the environment (install, start the app) and re-dispatch. If the app genuinely can't run in this sandbox, verify what you can through tests and say plainly in the summary which ACs were not checked on a running app.
+- `BLOCKED` → fix the environment (install, start the app) and re-dispatch. If the app genuinely can't run in this sandbox, verify what you can through tests and say plainly in the summary which ACs were not checked on a running app; then set *Verification* to `done`.
 
-Done when every AC has a verdict. Next is `ship`.
+Done when every AC has a verdict.
+
+## 4. UX review
+
+Only once step 3 is done: after `ALL PASS` and its fix rounds, or, if step 3 ended with the app unable to run, set the ledger to `UX review: skipped: app can't run here` and go straight to the `post_verification` call below. Decide from the spec and `git diff --stat <base>...HEAD` whether the branch changes user-visible UI: pages/routes, components, styles, HTML templates, an Electron renderer, or any AC observed on a page. When in doubt, it runs.
+
+- **No UI change** → ledger `UX review: skipped: <why>`, with a one-line reason (e.g. "no UI change: server function only").
+- **UI change** → ledger `running`; brief the `ux-reviewer` with the spec path, the base branch, the pages/screens the change touches (from the ACs and the diff) and, per page, the states the change introduces.
+
+Route its report:
+
+- `CLEAN` → ledger `done`.
+- `<n> MUST-FIX` → ledger `<n> must-fix`; brief a `slice-implementer` with the findings verbatim (page, width, mode, what is wrong, which rule), commit `fix(ux): <what> (#<n>)`, have a `slice-reviewer` review the range, run `.claude/check.sh`, and re-dispatch the `ux-reviewer` on the failed checks only. At most two rounds; must-fix findings still open become a question for the developer (`ask_questions`: fix further, or accept and list it under the PR's *Trade-offs*). Accepted → record the ruling in the ledger's *Rulings* and set `done`; fix further → another round.
+- **Polish** → no fix round: keep the list for the PR's *UX review* part only.
+- `BLOCKED` → fix the environment (install, start the app) and re-dispatch. If the app genuinely can't run here (or an Electron app has no Playwright harness), ledger `UX review: skipped: <why>`, and say so in the summary and the PR.
+
+Then call `post_verification(N, summary)` once: the verifier's summary ending with one line for the UX review (its result or the skip reason). Next is `ship`.

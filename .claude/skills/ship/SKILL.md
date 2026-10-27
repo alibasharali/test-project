@@ -10,8 +10,11 @@ description: Ship a finished item branch: review it in a fresh context, run the 
 - You are on `claude/<n>-*`, never on the base branch (`get_item`'s `delivery.baseBranch`) or `main`.
 - The working tree is clean.
 - The ledger's *Verification* is `done`. If not, go back to `implement-spec` step 3.
+- The ledger's `UX review` is `done` or `skipped: <why>`. If not, go back to `implement-spec` step 4.
 
 ## 2. Checks
+
+Call `get_item(N)` and re-check `fleet`, starting with what is marked changed (each item's `changes`, `fleet.left`, notes with `new: true`). If `fleet.you.baseTouched` is non-empty, the base branch changed your files since you branched: `git fetch origin <base> && git merge origin/<base>`, resolve any conflict, and push. Overlaps with other items don't stop the PR; never ask the developer about one.
 
 Run `.claude/check.sh`. Red sends you back to fixing, never forward.
 
@@ -36,7 +39,7 @@ Run the `lesson` skill on each one that doesn't already have a `chore(lesson)` c
 ## 5. Open the PR
 
 1. `git push -u origin HEAD`.
-2. Fill in [pr-template.md](pr-template.md) and call `open_pull_request(N, branch, title, body)` with title `<type>: <item title> (#<n>)`. The factory opens the PR into the base branch, turns on auto-merge where the preset and GitHub allow it, and moves the item to *In review*. Where the preset makes the merge ship (Straight to prod, Merge only), the developer merges; the tool's `next` says so.
+2. Fill in [pr-template.md](pr-template.md) and call `open_pull_request(N, branch, title, body)` with title `<type>: <item title> (#<n>)`. The factory opens the PR into the base branch, turns on auto-merge where the preset and GitHub allow it, and moves the item to *In review*. When full auto decided anything on the item (answered rounds, a promotion, its approval), the factory appends a *Decided by full auto* section to the body itself: don't write one. Where the preset makes the merge ship (Straight to prod, Merge only), the developer merges; the tool's `next` says so.
 3. If the tool fails, give the developer the branch and the PR body, and ask them to open it.
 
 ## 6. Hand over

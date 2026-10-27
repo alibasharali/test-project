@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "model": "opus",
+  "effortLevel": "medium",
   "permissions": {
     "deny": [
       "Read(**/.env)",
@@ -17,7 +18,11 @@
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-secrets.sh", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-secrets.sh",
+            "timeout": 10
+          }
         ]
       }
     ],
@@ -25,7 +30,11 @@
       {
         "matcher": "Edit|Write|MultiEdit",
         "hooks": [
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stack-drift.sh", "timeout": 30 }
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stack-drift.sh",
+            "timeout": 30
+          }
         ]
       }
     ],

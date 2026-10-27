@@ -16,6 +16,9 @@ What every factory project has, whatever its stack. Each item that sets a repo u
 4. **URLs on the board** (presets that deploy): `set_environment_urls(N, dev_url, prod_url)` once they are known, `null` for an environment the preset doesn't have.
 5. **Declared stack**: `.factory/stack.json` lists the stack the code uses (registry option ids, stacks the registry lacks under `described`, and under `ignore`, with a reason, options detection gets wrong here). It is the source of truth: the factory syncs its record from it on every merge into the base branch, and `.factory/check-stack.mjs` (kit-managed, rules in `.factory/detect.json`) fails when it and the code disagree. Change it in the same PR as the code, with the files `render_stack_files(N, stack_json)` returns.
 6. **Instructions** tell an agent how to work here: commands, architecture in a few lines, conventions and traps. New repos keep them in `AGENTS.md` (read by every coding agent) with `CLAUDE.md` importing it; a repo whose `CLAUDE.md` already holds them keeps it there. Add to the existing file; never replace what is there.
+7. **Formatters leave the kit alone**: a repo-wide formatter (`prettier --write .`, `biome format`, …) ignores the kit-managed files, which the next Update kit would overwrite anyway. For prettier, `.prettierignore` lists `.claude/`, `.factory/check-stack.mjs`, `.github/workflows/claude*.yml`, `.mcp.json` and `docs/agents/`.
+8. **README**: a factory-made README (the `readme` skill): it starts with `<!-- software-factory:readme -->`, says what the project is, where it runs and how to run it locally, and ends with a *Built with Software Factory* section.
+9. **Local env example**: a repo whose app reads a local env file (`.dev.vars`, `.env`) commits an example of it next to it (`.dev.vars.example`, `.env.example`) holding no secrets, with the app's mock switches (in-memory fakes of external services) on where it has them, and gitignores the real file. Agents create the real file from it with `.claude/local-env.sh` (kit-managed) before running the app.
 
 ## Reference: the TanStack Start recipe
 
@@ -49,6 +52,9 @@ concurrency:
 jobs:
   # the job id is the required status check; don't rename it
   check:
+    # Update kit PRs (factory/kit-v* from this repo; not forks, not the import PR) change
+    # only kit files, so this job skips; skipped still reports "check", which required checks accept
+    if: "${{ !(startsWith(github.head_ref, 'factory/kit-v') && github.event.pull_request.head.repo.full_name == github.repository && !startsWith(github.event.pull_request.title, 'chore: import into Software Factory')) }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
