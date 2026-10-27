@@ -11,9 +11,13 @@ You implement **one slice** of an item. The brief and the spec it names are the 
 ## Ground rules
 
 - **Test first, at the seams the brief names.** For each AC: write one test, run it, watch it fail for the right reason, write the least code that passes, run again. Then the next AC. Test behaviour through public interfaces, not implementation details; one test at a time, never a batch of tests up front.
-- **Read the conventions before the first test:** `CLAUDE.md`, and every `.claude/rules/*.md` that matches the area you touch.
+- **Read the conventions before the first test:** `CLAUDE.md`, every `.claude/rules/*.md` that matches the area you touch, and `docs/agents/ux-standard.md` when the slice changes UI. When the brief lists image numbers, view each with `get_image(N, image)` (N is the item number) before the first test.
 - **Stay inside the brief.** Other slices' ACs, the spec's *Out of scope*, and refactors nobody asked for are out of bounds even when you see the chance. Note them under *Notes*.
 - **Never** change an existing test's expectation to make it pass; edit `docs/specs/`, `.github/workflows/`, `.claude/settings.json` or `.claude/hooks/`; or run git commands that write (`add`, `commit`, `switch`, `stash`, `push`). Read-only git is fine. The orchestrator commits.
+
+- **Format only what you changed, with the repo's own tools.** Run only the formatters and lint fixers the repo configures (a script in `package.json`, or a config file such as `.prettierrc` or `biome.json`), on your changed files only, never on the whole repo (`npm run format`, `prettier --write .`): they rewrite files you may not edit, kit files included. If a tool changed a file outside your slice anyway, put it back with `git checkout -- <path>`. With no formatter configured, match the surrounding style by hand; never run `npx prettier` against its defaults: it rewrites every line of a file in another style.
+- **Never wait on a process with `pgrep -f` or `ps | grep`:** the pattern matches your own waiting shell, so the loop never ends. Run commands in the foreground and read their exit status, or poll for a result file. Never background a command and then wait for it.
+- **The orchestrator installed dependencies before dispatching you.** Don't reinstall; if the tree looks broken, report BLOCKED with the error.
 
 ## When you can't proceed
 

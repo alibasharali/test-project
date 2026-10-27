@@ -38,6 +38,36 @@
       ]
     },
     {
+      "id": "electron-desktop",
+      "label": "Electron desktop app",
+      "packages": [
+        "electron",
+        "electron-vite",
+        "electron-builder"
+      ],
+      "files": [
+        "electron-builder.yml",
+        "electron.vite.config.ts"
+      ],
+      "content": []
+    },
+    {
+      "id": "r2",
+      "label": "Cloudflare R2",
+      "packages": [],
+      "files": [],
+      "content": [
+        {
+          "paths": [
+            "wrangler.jsonc",
+            "wrangler.json",
+            "wrangler.toml"
+          ],
+          "includes": "r2_buckets"
+        }
+      ]
+    },
+    {
       "id": "resend",
       "label": "Resend",
       "packages": [
